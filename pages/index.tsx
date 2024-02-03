@@ -27,6 +27,7 @@ const Home: NextPage = () => {
         <button type="submit">Add Todo</button>
       </form>
       {state.context.error && <p>Error: {state.context.error}</p>}
+      {state.context.isTestTodo && <p>This is a test</p>}
       <ul>
         {state.context.todos.map((todo, index) => (
           <li key={index}>

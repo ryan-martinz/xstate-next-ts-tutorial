@@ -4,6 +4,7 @@ interface TodoContext {
   todos: string[];
   createNewTodoFormInput: string;
   error: string | null;
+  isTestTodo: boolean;
 }
 
 type TodoEvent =
@@ -25,6 +26,7 @@ const todoMachine = createMachine<TodoContext, TodoEvent>(
       todos: [],
       createNewTodoFormInput: "",
       error: null,
+      isTestTodo: false,
     },
     states: {
       initializing: {
@@ -35,6 +37,8 @@ const todoMachine = createMachine<TodoContext, TodoEvent>(
             target: "idle",
             actions: assign<TodoContext, FetchTodosSuccessEvent>({
               todos: (_, event) => event.data,
+              isTestTodo: (_, event) =>
+                event.data.some((todo) => todo === "test"),
             }),
           },
           onError: {
@@ -70,6 +74,8 @@ const todoMachine = createMachine<TodoContext, TodoEvent>(
             actions: assign<TodoContext, AddTodoSuccessEvent>({
               todos: (context, event) => [...context.todos, event.data],
               createNewTodoFormInput: () => "",
+              isTestTodo: (context, event) =>
+                updateIsTestTodo(addTodoToList(context.todos, event.data)),
             }),
           },
           onError: {
@@ -89,6 +95,8 @@ const todoMachine = createMachine<TodoContext, TodoEvent>(
             actions: assign<TodoContext, DeleteTodoSuccessEvent>({
               todos: (context, event) =>
                 context.todos.filter((_, index) => index !== event.data),
+              isTestTodo: (context, event) =>
+                updateIsTestTodo(removeTodoAtIndex(context.todos, event.data)),
             }),
           },
           onError: {
@@ -129,5 +137,17 @@ const todoMachine = createMachine<TodoContext, TodoEvent>(
     },
   }
 );
+
+function updateIsTestTodo(todos: any[]) {
+  return todos.some((todo: string) => todo === "test");
+}
+
+function removeTodoAtIndex(todos: any[], index: number) {
+  return todos.filter((_: any, idx: any) => idx !== index);
+}
+
+function addTodoToList(todos: string[], newTodo: string) {
+  return [...todos, newTodo];
+}
 
 export { todoMachine };
