@@ -1,99 +1,46 @@
 import { useMachine } from "@xstate/react";
 import type { NextPage } from "next";
-import { todosMachine } from "../machines/todoAppMachine";
-
-const todos = new Set<string>([]);
+import React, { useEffect } from "react";
+import { todoMachine } from "../machines/todoAppMachine";
+import { useTodosApi } from "../hooks/useTodosApi";
 
 const Home: NextPage = () => {
-  const [state, send] = useMachine(todosMachine, {
-    services: {
-      loadTodos: async () => {
-        return Array.from(todos);
-      },
-      saveTodo: async (context, event) => {
-        todos.add(context.createNewTodoFormInput);
-      },
-      deleteTodo: async (context, event) => {
-        todos.delete(event.todo);
-      },
-    },
-  });
+  const [state, send] = useMachine(todoMachine);
+  const { fetchTodos, addTodo, deleteTodo } = useTodosApi(send);
+
+  useEffect(() => {
+    fetchTodos();
+  }, [fetchTodos]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (state.context.createNewTodoFormInput) {
+      await addTodo(state.context.createNewTodoFormInput);
+    }
+  };
 
   return (
     <div>
-      <pre>{JSON.stringify(state.value)}</pre>
-      <pre>{JSON.stringify(state.context)}</pre>
-      <div>
-        {state.matches("Todos Loaded") && (
-          <>
-            {state.context.todos.map((todo) => (
-              <div
-                key={todo}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <p>{todo}</p>
-                <button
-                  onClick={() => {
-                    send({
-                      type: "Delete",
-                      todo,
-                    });
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-          </>
-        )}
-        {state.matches("Todos Loaded") && (
-          <button
-            onClick={() => {
-              send({
-                type: "Create new",
-              });
-            }}
-          >
-            Create new
-          </button>
-        )}
-        {state.matches("Deleting todo errored") && (
-          <>
-            <p>Something went wrong: {state.context.errorMessage}</p>
-            <button
-              onClick={() => {
-                send({
-                  type: "Speed up",
-                });
-              }}
-            >
-              Go back to list
-            </button>
-          </>
-        )}
-        {state.matches("Creating new todo.Showing form input") && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              send({
-                type: "Submit",
-              });
-            }}
-          >
-            <input
-              onChange={(e) => {
-                send({
-                  type: "Form input changed",
-                  value: e.target.value,
-                });
-              }}
-            ></input>
-          </form>
-        )}
-      </div>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          placeholder="Add a new todo"
+          value={state.context.createNewTodoFormInput}
+          onChange={(e) =>
+            send({ type: "UPDATE_INPUT", value: e.target.value })
+          }
+        />
+        <button type="submit">Add Todo</button>
+      </form>
+      {state.context.error && <p>Error: {state.context.error}</p>}
+      <ul>
+        {state.context.todos.map((todo, index) => (
+          <li key={index}>
+            {todo}
+            <button onClick={() => deleteTodo(index)}>Delete</button>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
