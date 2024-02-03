@@ -1,4 +1,4 @@
-import { createMachine, assign } from "xstate";
+import { createMachine, assign, DoneInvokeEvent } from "xstate";
 
 interface TodoContext {
   todos: string[];
@@ -6,73 +6,128 @@ interface TodoContext {
   error: string | null;
 }
 
-export type TodoEvent =
+type TodoEvent =
   | { type: "ADD_TODO"; value: string }
   | { type: "DELETE_TODO"; index: number }
   | { type: "UPDATE_INPUT"; value: string }
   | { type: "LOAD_TODOS_SUCCESS"; todos: string[] }
   | { type: "ERROR"; message: string };
 
-const todoMachine = createMachine<TodoContext, TodoEvent>({
-  id: "todos",
-  initial: "idle",
-  context: {
-    todos: [],
-    createNewTodoFormInput: "",
-    error: null,
-  },
-  states: {
-    idle: {
-      on: {
-        ADD_TODO: {
-          actions: assign((context, event) => {
-            if (event.type === "ADD_TODO") {
-              return {
-                ...context,
-                todos: [...context.todos, event.value],
-                createNewTodoFormInput: "",
-              };
-            }
-            return context;
-          }),
+interface FetchTodosSuccessEvent extends DoneInvokeEvent<string[]> {}
+interface AddTodoSuccessEvent extends DoneInvokeEvent<string> {}
+interface DeleteTodoSuccessEvent extends DoneInvokeEvent<number> {}
+
+const todoMachine = createMachine<TodoContext, TodoEvent>(
+  {
+    id: "todos",
+    initial: "initializing",
+    context: {
+      todos: [],
+      createNewTodoFormInput: "",
+      error: null,
+    },
+    states: {
+      initializing: {
+        invoke: {
+          id: "fetchTodos",
+          src: "fetchTodos",
+          onDone: {
+            target: "idle",
+            actions: assign<TodoContext, FetchTodosSuccessEvent>({
+              todos: (_, event) => event.data,
+            }),
+          },
+          onError: {
+            target: "idle",
+            actions: assign<TodoContext, DoneInvokeEvent<string>>({
+              error: (_, event) => event.data,
+            }),
+          },
         },
-        DELETE_TODO: {
-          actions: assign((context, event) => {
-            if (event.type === "DELETE_TODO") {
-              return {
-                ...context,
-                todos: context.todos.filter(
-                  (_, index) => index !== event.index
-                ),
-              };
-            }
-            return context;
-          }),
+      },
+      idle: {
+        on: {
+          ADD_TODO: "addingTodo",
+          DELETE_TODO: "deletingTodo",
+          UPDATE_INPUT: {
+            actions: assign({
+              createNewTodoFormInput: (context, event) => {
+                if (event.type === "UPDATE_INPUT") {
+                  return event.value;
+                }
+                return context.createNewTodoFormInput;
+              },
+            }),
+          },
         },
-        UPDATE_INPUT: {
-          actions: assign({
-            createNewTodoFormInput: (context, event) => {
-              return event.type === "UPDATE_INPUT"
-                ? event.value
-                : context.createNewTodoFormInput;
-            },
-          }),
+      },
+      addingTodo: {
+        invoke: {
+          id: "addTodo",
+          src: "addTodo",
+          onDone: {
+            target: "idle",
+            actions: assign<TodoContext, AddTodoSuccessEvent>({
+              todos: (context, event) => [...context.todos, event.data],
+              createNewTodoFormInput: () => "",
+            }),
+          },
+          onError: {
+            target: "idle",
+            actions: assign<TodoContext, DoneInvokeEvent<string>>({
+              error: (_, event) => event.data,
+            }),
+          },
         },
-        LOAD_TODOS_SUCCESS: {
-          actions: assign({
-            todos: (_, event) =>
-              event.type === "LOAD_TODOS_SUCCESS" ? event.todos : [],
-          }),
-        },
-        ERROR: {
-          actions: assign({
-            error: (_, event) =>
-              event.type === "ERROR" ? event.message : null,
-          }),
+      },
+      deletingTodo: {
+        invoke: {
+          id: "deleteTodo",
+          src: "deleteTodo",
+          onDone: {
+            target: "idle",
+            actions: assign<TodoContext, DeleteTodoSuccessEvent>({
+              todos: (context, event) =>
+                context.todos.filter((_, index) => index !== event.data),
+            }),
+          },
+          onError: {
+            target: "idle",
+            actions: assign<TodoContext, DoneInvokeEvent<string>>({
+              error: (_, event) => event.data,
+            }),
+          },
         },
       },
     },
   },
-});
+  {
+    services: {
+      fetchTodos: async () => {
+        const response = await fetch("/api/getTodos");
+        const data = await response.json();
+        return data.todos;
+      },
+      addTodo: async (_, event) => {
+        if (event.type !== "ADD_TODO") return;
+        await fetch("/api/addTodo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ todo: event.value }),
+        });
+        return event.value;
+      },
+      deleteTodo: async (_, event) => {
+        if (event.type !== "DELETE_TODO") return;
+        await fetch("/api/deleteTodo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ index: event.index }),
+        });
+        return event.index;
+      },
+    },
+  }
+);
 
 export { todoMachine };

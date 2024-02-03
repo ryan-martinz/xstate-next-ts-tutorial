@@ -1,21 +1,15 @@
 import { useMachine } from "@xstate/react";
 import type { NextPage } from "next";
-import React, { useEffect } from "react";
+import React from "react";
 import { todoMachine } from "../machines/todoAppMachine";
-import { useTodosApi } from "../hooks/useTodosApi";
 
 const Home: NextPage = () => {
   const [state, send] = useMachine(todoMachine);
-  const { fetchTodos, addTodo, deleteTodo } = useTodosApi(send);
 
-  useEffect(() => {
-    fetchTodos();
-  }, [fetchTodos]);
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (state.context.createNewTodoFormInput) {
-      await addTodo(state.context.createNewTodoFormInput);
+    if (state.context.createNewTodoFormInput.trim()) {
+      send({ type: "ADD_TODO", value: state.context.createNewTodoFormInput });
     }
   };
 
@@ -37,7 +31,9 @@ const Home: NextPage = () => {
         {state.context.todos.map((todo, index) => (
           <li key={index}>
             {todo}
-            <button onClick={() => deleteTodo(index)}>Delete</button>
+            <button onClick={() => send({ type: "DELETE_TODO", index })}>
+              Delete
+            </button>
           </li>
         ))}
       </ul>
