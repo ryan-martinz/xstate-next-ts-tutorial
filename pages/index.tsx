@@ -1,5 +1,5 @@
-import React from "react";
 import type { NextPage } from "next";
+import React from "react";
 import { useMachine } from "@xstate/react";
 import { todosMachine } from "../machines/todoAppMachine";
 
@@ -17,7 +17,7 @@ const Home: NextPage = () => {
     <div>
       <h1>Todo List</h1>
       {state.matches("initializing") && <p>Loading...</p>}
-      {state.matches("idle") && (
+      {state.matches("ready") && (
         <>
           <form onSubmit={handleSubmit}>
             <input

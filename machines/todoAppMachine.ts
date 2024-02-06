@@ -35,7 +35,7 @@ export const todosMachine = setup({
     deleteTodo,
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcD2FWwHQEsB2OyOAhgDY4Be+UAxBnmLngG6oDWjAZmMgMYAWAFXSYA2gAYAuolAAHTIRyo8MkAA9EAZk0AOLAE4ATOICsJ8Yc36A7LpOaANCACeiHQEYsmw4f3uzACzu2gBs2gC+4U5oGNj4imSU1DRgAE6pqKlYsqTEyJyZALZY3HxCIrAS0kgg8rCKyqoaCNp6RqbmljZ2ji6I7rZYJvph5jriYZoBEVEgMZi4EKRgNACCACLrAPqCAPLru1WqdQ0qNc2a1oZDV-riAQG2OgETJk6uCMOaWDp3If-uR5BHyRaIVRbLGjrACiABloYJoTt9ocpMcFERGuctI8DNZxKZLv9hqZ3ohDCETD8QjYdCFxNZgt4AqC5uCcEsVgBVAAK61WiK2AEkAHI8rmCI41E6Ys6gZomIJDX46QwmaxhfSK-RkhCGALXdwhfziTQ0wwaswhVnzbAQMDLIh4KDCDB0ZSMfCsDhYe2OsCu1BSuQYpRy9RaXQGYxmCxWJ72XWafxYGn2XwDHSqkLWG3gv08aiBlLpTLZXL5Iq+h08AMiYO1UNY+WRtoxzrxnq6l7WAwhHQah7TVWPPOxLDECAQIsid0MJjexiTiCBhsysNNVvRjpx7o6RN9BABRVYaxGEYW9UM-R0scLZczt1pDJZHJ5AqpYrL1do6VN8MXFG7Sxl0Ca9B8iq9hMmrjD4DJnpEsx4OgcCqLa6L1LKm4IAAtCEup4XecQEEQiRUM6GGnNhBq6vo3wmO4+g2IC9JMSY-ZERCYCUVh2KfM8Qz9t4jHTCYA7gTi1zTCEhjBHRTGWNasy2tWjqPqgPEbnxNGHhS1z4oY4wiRSNL6JxD7OoGmnNhGCD4qmjFno81jWMedjdtYVJTExBpGuI7i-Jxz6ZNZAH9C8p4MjmN5TKYPjWLqYniKm-a-OYLmuc8iHhEAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcD2FWwHQEsB2OyOAhgDY4Be+UAxBnmLngG6oDWjAZmMgMYAWAFXSYA2gAYAuolAAHTIRyo8MkAA9EAZk0AOLAE4ATOICsOzQBZDJgIwB2TaYA0IAJ6IdNrJsOH9Nyyt9HTtDAF8wlzQMbHxFMkpqGjAAJxTUFKxZUmJkTgyAWyxuPiERWAlpJBB5WEVlVQ0EbT0jU3MrWwdnN0R7TSwTfQA2QItbEItgiKjyrBSwYghXGgBBABF1gH1BAHl13crVWvqVaqbNUMHQ-Qc7G31xe5sXdwQhgZ1Hk2HDGxM7OJLDMQNFMPNFssaOsAKIAGRhghhO32hykxwURAa5y0FjsBkBNiBtk0t0M2leiEMwxMWB0w1uQz+NmphgsILB2AWSxWAFUAArrVZIrYASQAcvzeYIjtUTlizqAmiYLF4zPpHhZNA8LFNNJSEGzDFgbMMbLrVZoAdoTOFIqC5hAwKQeNRhBg6MpGPhWBwsE6XcgwO7ULK5JilIr1FpdAZjGZLNZ+j03traQzbd0GWb9JoOY7na68FAQ8k0hksjk8oV-YWgyGwzUI9ilTHWvGOknuiYDRYngZhiFxH27DoTE8AvmYlglhA3SJPQwmL7GLOG+i5c2oxdY20E51kz3eghxhYsHYjI9xNfbuIWXYp+DZ-OPal0plsrl8ikimuRI35UjRo2zjdpEy6RwjzeFV8XEYZRm1O8xx0L4IntPB0DgVROQxOoFWAhAAFphgNYisGvCjqX+DVhgcExH1iAgiASKhi1w04CKsA1c0GB59CZGwHgBfiGIhHl2PwnF3lHc9c0HW0iR0ckoNxY0tTNAF6XGbRRIDIsSxECSgKkrjj1Zc9xEMOx7hGK16TtWZp2fYsQyMltowQQEsBzC9r0ceCUIsXs7FpSxghMS5tHg8d2XtTksDfDI3O3Po+wsux5Pgq0hluA0zHEbzByvMcTDMCK0LCIA */
   id: "todos",
   context: {
     todos: [],
@@ -49,20 +49,20 @@ export const todosMachine = setup({
         id: "fetchTodos",
         src: "fetchTodos",
         onDone: {
-          target: "idle",
+          target: "ready",
           actions: assign({
             todos: (context: any, _: any) => context.event.output,
           }),
         },
         onError: {
-          target: "idle",
+          target: "ready",
           actions: assign({
             todos: (context: any, _: any) => context.event.output,
           }),
         },
       },
     },
-    idle: {
+    ready: {
       on: {
         ADD_TODO: "addingTodo",
         DELETE_TODO: "deletingTodo",
@@ -84,7 +84,7 @@ export const todosMachine = setup({
         src: "deleteTodo",
         input: ({ event }) => ({ event }),
         onDone: {
-          target: "idle",
+          target: "ready",
           actions: assign({
             todos: ({ context, event }) =>
               context.todos.filter(
@@ -93,7 +93,7 @@ export const todosMachine = setup({
           }),
         },
         onError: {
-          target: "idle",
+          target: "ready",
         },
       },
     },
@@ -103,14 +103,14 @@ export const todosMachine = setup({
         src: "addTodo",
         input: ({ event }) => ({ event }),
         onDone: {
-          target: "idle",
+          target: "ready",
           actions: assign({
             todos: ({ context, event }) => [...context.todos, event.output],
             createNewTodoFormInput: "",
           }),
         },
         onError: {
-          target: "idle",
+          target: "ready",
         },
       },
     },
