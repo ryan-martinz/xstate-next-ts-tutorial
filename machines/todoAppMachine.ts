@@ -1,4 +1,4 @@
-import { createActor, setup, assign, fromPromise } from "xstate";
+import { setup, assign, fromPromise } from "xstate";
 
 interface TodoContext {
   todos: string[];
@@ -116,10 +116,3 @@ export const todosMachine = setup({
     },
   },
 });
-
-const feedbackActor = createActor(todosMachine);
-feedbackActor.subscribe((snapshot) => {
-  console.log("state", snapshot.value);
-});
-feedbackActor.start();
-feedbackActor.getSnapshot();
