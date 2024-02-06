@@ -94,8 +94,12 @@ export const todosMachine = setup({
               context.todos.filter(
                 (_: any, index: any) => index !== event.output
               ),
-            isTestSet: ({ context, event }) =>
-              event.output === "test" && context.event.output.includes("test"),
+            isTestSet: ({ context, event }) => {
+              return (
+                context.todos.filter((todo: string) => todo === "test").length >
+                  1 && event.output !== "test"
+              );
+            },
           }),
         },
         onError: {
