@@ -1,10 +1,10 @@
-import { useMachine } from "@xstate/react";
-import type { NextPage } from "next";
 import React from "react";
-import { todoMachine } from "../machines/todoAppMachine";
+import type { NextPage } from "next";
+import { useMachine } from "@xstate/react";
+import { todosMachine } from "../machines/todoAppMachine";
 
 const Home: NextPage = () => {
-  const [state, send] = useMachine(todoMachine);
+  const [state, send] = useMachine(todosMachine);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,29 +15,35 @@ const Home: NextPage = () => {
 
   return (
     <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Add a new todo"
-          value={state.context.createNewTodoFormInput}
-          onChange={(e) =>
-            send({ type: "UPDATE_INPUT", value: e.target.value })
-          }
-        />
-        <button type="submit">Add Todo</button>
-      </form>
-      {state.context.error && <p>Error: {state.context.error}</p>}
-      {state.context.isTestTodo && <p>This is a test</p>}
-      <ul>
-        {state.context.todos.map((todo, index) => (
-          <li key={index}>
-            {todo}
-            <button onClick={() => send({ type: "DELETE_TODO", index })}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+      <h1>Todo List</h1>
+      {state.matches("initializing") && <p>Loading...</p>}
+      {state.matches("idle") && (
+        <>
+          <form onSubmit={handleSubmit}>
+            <input
+              type="text"
+              placeholder="Add a new todo"
+              value={state.context.createNewTodoFormInput || ""}
+              onChange={(e) =>
+                send({ type: "UPDATE_INPUT", value: e.target.value })
+              }
+            />
+            <button type="submit">Add Todo</button>
+          </form>
+          {state.context.todos.length === 0 && <p>No todos yet</p>}
+          <ul>
+            {state.context.todos.map((todo: any, index: any) => (
+              <li key={index}>
+                {todo}
+                <button onClick={() => send({ type: "DELETE_TODO", index })}>
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {state.matches("error") && <p>Error: {state.context.error}</p>}
     </div>
   );
 };
