@@ -114,5 +114,8 @@ export const todosMachine = setup({
         },
       },
     },
+    error: {
+      on: {},
+    },
   },
 });
