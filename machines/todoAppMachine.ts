@@ -4,6 +4,7 @@ interface TodoContext {
   todos: string[];
   error: string | null;
   createNewTodoFormInput: string;
+  isTestSet: boolean;
 }
 
 const fetchTodos = fromPromise(async () => {
@@ -35,12 +36,13 @@ export const todosMachine = setup({
     deleteTodo,
   },
 }).createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcD2FWwHQEsB2OyOAhgDY4Be+UAxBnmLngG6oDWjAZmMgMYAWAFXSYA2gAYAuolAAHTIRyo8MkAA9EAZk0AOLAE4ATOICsOzQBZDJgIwB2TaYA0IAJ6IdNrJsOH9Nyyt9HTtDAF8wlzQMbHxFMkpqGjAAJxTUFKxZUmJkTgyAWyxuPiERWAlpJBB5WEVlVQ0EbT0jU3MrWwdnN0R7TSwTfQA2QItbEItgiKjyrBSwYghXGgBBABF1gH1BAHl13crVWvqVaqbNUMHQ-Qc7G31xe5sXdwQhgZ1Hk2HDGxM7OJLDMQNFMPNFssaOsAKIAGRhghhO32hykxwURAa5y0FjsBkBNiBtk0t0M2leiEMwxMWB0w1uQz+NmphgsILB2AWSxWAFUAArrVZIrYASQAcvzeYIjtUTlizqAmiYLF4zPpHhZNA8LFNNJSEGzDFgbMMbLrVZoAdoTOFIqC5hAwKQeNRhBg6MpGPhWBwsE6XcgwO7ULK5JilIr1FpdAZjGZLNZ+j03traQzbd0GWb9JoOY7na68FAQ8k0hksjk8oV-YWgyGwzUI9ilTHWvGOknuiYDRYngZhiFxH27DoTE8AvmYlglhA3SJPQwmL7GLOG+i5c2oxdY20E51kz3eghxhYsHYjI9xNfbuIWXYp+DZ-OPal0plsrl8ikimuRI35UjRo2zjdpEy6RwjzeFV8XEYZRm1O8xx0L4IntPB0DgVROQxOoFWAhAAFphgNYisGvCjqX+DVhgcExH1iAgiASKhi1w04CKsA1c0GB59CZGwHgBfiGIhHl2PwnF3lHc9c0HW0iR0ckoNxY0tTNAF6XGbRRIDIsSxECSgKkrjj1Zc9xEMOx7hGK16TtWZp2fYsQyMltowQQEsBzC9r0ceCUIsXs7FpSxghMS5tHg8d2XtTksDfDI3O3Po+wsux5Pgq0hluA0zHEbzByvMcTDMCK0LCIA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcD2FWwHQEsB2OyOAhgDY4Be+UAxBnmLngG6oDWjAZmMgMYAWAFXSYA2gAYAuolAAHTIRyo8MkAA9EAZk0AOLAE4ATOICsO8foDsJgIyaAbOM0AaEAE9EOm1k2HD+m0N7ABYnEMt9AF9I1zQMbHxFMkpqGjAAJ3TUdKxZUmJkTmyAWyxuPiERWAlpJBB5WEVlVQ0EbT0jU3MrWwcnVw8EG0tNLBN9e01gywjzE0tDaNiqrHSwYgg3GgBBABFdgH1BAHld45rVBqaVOtbNBbGF-Qt7Kxtg5+CBxHHRnWf7I5xDNtDYojEQHFMKt1psaLsAKIAGQRggRR1O5yklwURGaty00wMlnEplCOlsNjM9m+CCCJiwOlelns72sNlMkyWkJWaw2WwAqgAFXbbNEHACSADkhQLBBc6lc8TdQK0TMFvGZ9BTpu9DDNDLTDMFDFgbKzQsaSfoJuDlvEsBAwKQeNRhBg6MpGPhWBxHc6eGB3agFXJcUoVeotLoDMYzBZ2X0XO4tFSsK8TPqFsNNM9jdyodgnS6iHgoMG0plsrl8oUSv6S0GRKH6uH8arox0491E45k4NQpYDPYdAsdMEKSZ7PMCysNhA3SJPQwmL7GPPgy2lRGWp3Y10E70+7TguqsBF-NpLBrNO97LOHfPFx6MlkcnkCkV0qUN83sYq20jO4Y06eMejsY8UwQdUh3EQFdBMUl9A+aIITwdA4FUQscUaZVdwQABaGkoKIrBSXIijKMsB9oUSIhkioMscOufCTVpfRRlsG17EMHQHBHcwdBo7A+U2Zi8IJaDLD0CIHEQ8xXg1GxaSmU1ggcc1Xg5aSKU0YSG1dMtg3EndJLYqCglNEl9XGJT5mCfSnyMkQTPbKMEBJdMwXMcQJ00XyvENKDpgZKYbXNf57lsEJ9NfbJXKAxB3nEc9gQE-VNBMW8AlpeN0wEpkdGMTLggc1CgA */
   id: "todos",
   context: {
     todos: [],
     error: null,
     createNewTodoFormInput: "",
+    isTestSet: false,
   } as TodoContext,
   initial: "initializing",
   states: {
@@ -52,6 +54,8 @@ export const todosMachine = setup({
           target: "ready",
           actions: assign({
             todos: (context: any, _: any) => context.event.output,
+            isTestSet: (context: any, _: any) =>
+              context.event.output.includes("test"),
           }),
         },
         onError: {
@@ -90,6 +94,8 @@ export const todosMachine = setup({
               context.todos.filter(
                 (_: any, index: any) => index !== event.output
               ),
+            isTestSet: ({ context, event }) =>
+              event.output === "test" && context.event.output.includes("test"),
           }),
         },
         onError: {
@@ -107,6 +113,8 @@ export const todosMachine = setup({
           actions: assign({
             todos: ({ context, event }) => [...context.todos, event.output],
             createNewTodoFormInput: "",
+            isTestSet: ({ context, event }) =>
+              context.isTestSet === true || event.output === "test",
           }),
         },
         onError: {

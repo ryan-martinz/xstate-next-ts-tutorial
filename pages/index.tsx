@@ -30,6 +30,7 @@ const Home: NextPage = () => {
             />
             <button type="submit">Add Todo</button>
           </form>
+          {state.context.isTestSet && <p>Test Todo Set.</p>}
           {state.context.todos.length === 0 && <p>No todos yet</p>}
           <ul>
             {state.context.todos.map((todo: any, index: any) => (
